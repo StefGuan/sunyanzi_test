@@ -484,6 +484,15 @@
       display: none !important;
     }
   </style>
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?5722229b0c3950ceae5918cae6a5c1fa";
+    var s = document.getElementsByTagName("script")[0]; 
+    s.parentNode.insertBefore(hm, s);
+  })();
+  </script>
 </head>
 <body>
   <div class="shell">
@@ -932,6 +941,10 @@
         // 歌单
         const playlist = document.getElementById('playlist');
         playlist.innerHTML = album.playlist.map(song => `<li>🎵 ${song}</li>`).join('');
+
+        if (typeof _hmt !== 'undefined') {
+        _hmt.push(['_trackEvent', '孙燕姿测试', '完成匹配', best.name, similarity]);
+        }
 
         showScreen('result');
       }
