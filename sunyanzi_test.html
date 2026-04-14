@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>孙燕姿专辑匹配 · 你会被哪一种感觉找到</title>
+  <style>
+    :root {
+      --bg: #faf6f0;
+      --panel: #ffffff;
+      --text: #2e2b28;
+      --muted: #7f7a74;
+      --line: #e7e0d8;
+      --soft: #f5f0e9;
+      --accent: #b87c4e;
+      --accent-strong: #8b5e3c;
+      --shadow: 0 16px 40px rgba(80, 50, 30, 0.08);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top left, #fdfaf7 0, #faf6f0 36%, #f5efe8 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 32px;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "🎵";
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 80px;
+      opacity: 0.15;
+      pointer-events: none;
+      transform: rotate(15deg);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--accent-strong);
+      border: 1px solid var(--line);
+      background: var(--soft);
+      border-radius: 999px;
+      padding: 6px 14px;
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      max-width: 680px;
+    }
+
+    .hero .sub {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+      max-width: 720px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+      font: inherit;
+    }
+
+    button:hover { transform: translateY(-2px); }
+    button:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+
+    .btn-primary {
+      background: var(--accent-strong);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 40px;
+      box-shadow: 0 8px 20px rgba(139, 94, 60, 0.2);
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--accent-strong);
+      padding: 14px 24px;
+      border-radius: 40px;
+      border: 1px solid var(--line);
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .test-wrap,
+    .result-wrap {
+      margin-top: 22px;
+      padding: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .progress {
+      flex: 1;
+      min-width: 240px;
+      height: 8px;
+      background: #ede6df;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #c99b7a, #8b5e3c);
+      border-radius: inherit;
+      transition: width .22s ease;
+    }
+
+    .progress-text {
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .question-list {
+      display: grid;
+      gap: 20px;
+    }
+
+    .question {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff, #fcfaf7);
+    }
+
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 12px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .question-title {
+      font-size: 16px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      transition: border-color .16s ease, background .16s ease;
+    }
+
+    .option:hover {
+      border-color: #c9b09a;
+      background: #fcf8f4;
+    }
+
+    .option input {
+      margin-top: 3px;
+      accent-color: var(--accent-strong);
+      transform: scale(1.1);
+      flex-shrink: 0;
+    }
+
+    .option-code {
+      font-weight: 700;
+      color: var(--accent-strong);
+      min-width: 22px;
+    }
+
+    .actions-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+      padding-top: 8px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .result-layout {
+      display: grid;
+      gap: 20px;
+    }
+
+    .result-top {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .poster-box, .type-box, .analysis-box, .dim-box, .playlist-box {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff, #fcfaf7);
+    }
+
+    .poster-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .poster-image {
+      width: 100%;
+      max-width: 220px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      background: #f5f0e9;
+      object-fit: cover;
+      aspect-ratio: 1/1;
+    }
+
+    .poster-caption {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .type-kicker {
+      font-size: 13px;
+      color: var(--accent-strong);
+      margin-bottom: 8px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .type-name {
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .type-subname {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .match {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 16px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--accent-strong);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .analysis-box h3, .dim-box h3, .playlist-box h3 {
+      font-size: 17px;
+      margin-bottom: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .analysis-box p {
+      margin: 0;
+      color: #3a3530;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0 4px;
+    }
+
+    .tag {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--accent-strong);
+    }
+
+    .dim-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dim-item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: #fff;
+    }
+
+    .dim-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .dim-item-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .dim-item-score {
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .dim-item p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #ede6df;
+      border-radius: 999px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-strong);
+      border-radius: inherit;
+    }
+
+    .playlist-box ul {
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .playlist-box li {
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .playlist-box li:last-child {
+      border-bottom: none;
+    }
+
+    .result-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .lyric-quote {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: var(--soft);
+      border-radius: 16px;
+      color: var(--accent-strong);
+      font-style: italic;
+      border-left: 3px solid var(--accent);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 800px) {
+      .result-top { grid-template-columns: 1fr; }
+      .hero { padding: 24px; }
+    }
+
+    @media (max-width: 600px) {
+      .shell { padding: 14px 12px 42px; }
+      .hero, .test-wrap, .result-wrap { padding: 18px; }
+      .hero h1 { font-size: 30px; }
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <!-- 首页 -->
+    <section id="intro" class="screen active">
+      <div class="hero card">
+        <div class="eyebrow">
+          <span>🎧</span> Yanzi & You
+        </div>
+        <h1>你内心深处，<br>是哪张孙燕姿专辑？</h1>
+        <div class="sub">
+          十三张专辑，十三种灵魂频率。<br>
+          从 水火同源的神奇魔力，到理智与疯狂的并行——<br>
+          让我们用平日里的选择，找到那张最懂你的唱片。
+        </div>
+        <div class="hero-actions">
+          <button id="startBtn" class="btn-primary">✨ 开始聆听自己</button>
+        </div>
+        <div style="margin-top: 28px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: flex; justify-content: space-between;">
+          <span>🎤 孙燕姿 · 十三张录音室专辑</span>
+          <span>#天黑黑 到 #飞瀑而下</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 测试页面 -->
+    <section id="test" class="screen">
+      <div class="test-wrap card">
+        <div class="topbar">
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="progress-text" id="progressText">0 / 16</div>
+        </div>
+
+        <div id="questionList" class="question-list"></div>
+
+        <div class="actions-bottom">
+          <div class="hint" id="testHint">每一首主打歌，都是一次灵魂的试探。</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="backIntroBtn" class="btn-secondary">← 返回首页</button>
+            <button id="submitBtn" class="btn-primary" disabled>🎵 揭晓专属专辑</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结果页面 -->
+    <section id="result" class="screen">
+      <div class="result-wrap card">
+        <div class="result-layout">
+          <div class="result-top">
+            <div class="poster-box" id="posterBox">
+              <img id="posterImage" class="poster-image" alt="专辑封面" crossorigin="anonymous">
+              <div id="posterCaption" class="poster-caption"></div>
+            </div>
+
+            <div class="type-box">
+              <div class="type-kicker" id="resultModeKicker">灵魂专辑</div>
+              <div class="type-name" id="resultTypeName"></div>
+              <div class="match" id="matchBadge"></div>
+              <div class="tag-list" id="tagContainer"></div>
+              <div class="type-subname" id="resultTypeSub"></div>
+            </div>
+          </div>
+
+          <div class="analysis-box">
+            <h3>🎙️ 专辑思想解读</h3>
+            <p id="resultDesc"></p>
+            <div id="lyricDisplay" class="lyric-quote"></div>
+          </div>
+
+          <div class="dim-box">
+            <h3>📊 你的维度契合度</h3>
+            <div id="dimList" class="dim-list"></div>
+          </div>
+
+          <div class="playlist-box">
+            <h3>🎧 专属推荐歌单</h3>
+            <ul id="playlist"></ul>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="restartBtn" class="btn-secondary">🔄 重新测试</button>
+            <button id="toTopBtn" class="btn-primary">🏠 回到首页</button>
+          </div>
+        </div>
+        <div class="footer-note">
+          * 专辑封面图片来自公开资源，如加载失败不影响测试结果。仅供娱乐，愿你找到属于自己的那张唱片。
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      "use strict";
+
+      // ---------- 专辑数据 (思想、介绍、代表作、图片等) ----------
+      const ALBUMS = [
+        { 
+          code: "YANZI", name: "孙燕姿 同名专辑", year: "2000",
+          tagline: "从来没有一个二十二岁的女生，像她这样唱歌",
+          desc: "千禧年的第一声，干净而坚定。《天黑黑》里藏着对成人世界的第一声质疑，却也带着最质朴的勇气。这张专辑是出发的姿态——像刚刚学会飞行的雏鸟，对世界有困惑，但依然选择相信。你内心住着一个愿意从零开始、不为任何人改变节奏的灵魂。",
+          tags: ["勇敢","纯粹","倔强"],
+          dims: { courage: 0.85, purity: 0.90, growth: 0.70 },
+          lyric: "下起雨也要勇敢前进",
+          playlist: ["天黑黑","超快感","爱情证书","很好","Leave Me Alone"],
+          cover: "https://p2.music.126.net/33D6w3mJHZhfchZ5fFfI2g==/109951163930504448.jpg",
+          color: "#5a6e5a"
+        },
+        { 
+          code: "HAPPINESS", name: "我要的幸福", year: "2000",
+          tagline: "一股沉静而有力量的声音划破沉寂",
+          desc: "幸福不是盲目地奔跑，而是知道自己要去哪里。这张专辑里既有《开始懂了》的释怀，也有同名曲里“用我的方式”的宣告。你是一个对生活有规划、对自我有要求的人，不随波逐流，在自己的时区里不慌不忙。",
+          tags: ["理性","成长","独立"],
+          dims: { rational: 0.88, growth: 0.80, independence: 0.85 },
+          lyric: "我还不清楚 怎样的速度 符合这世界 变化的脚步",
+          playlist: ["我要的幸福","开始懂了","难得一见","害怕","相信"],
+          cover: "https://p2.music.126.net/_wKf1Y6vI5B2e3xWQ2pB-g==/109951163930509876.jpg",
+          color: "#7a8c7a"
+        },
+        { 
+          code: "KITE", name: "风筝", year: "2001",
+          tagline: "流行是流行，我是我",
+          desc: "《风筝》里唱道：“我不要 将你多绑住一秒”。这张专辑的核心是自由——但并非决绝的离开，而是收放自如的智慧。你是一个内心向往广阔天地，却又懂得珍惜羁绊的人，在独立与亲密之间找到了属于自己的节奏。",
+          tags: ["自由","洒脱","重情"],
+          dims: { freedom: 0.92, warmth: 0.75, wisdom: 0.80 },
+          lyric: "只有自己能 让自己发光",
+          playlist: ["风筝","任性","逃亡","绿光","爱情字典"],
+          cover: "https://p2.music.126.net/1qYh2bZ8c5fX5nWQJkG1Gw==/109951163930516854.jpg",
+          color: "#7a8c9a"
+        },
+        { 
+          code: "START", name: "Start 自选集", year: "2002",
+          tagline: "饮水思源，以己渡人",
+          desc: "这不是一张普通的翻唱专辑，而是孙燕姿亲手挑选的成长BGM。每首歌都是她音乐道路上的里程碑。你是一个懂得感恩、重视来路的人，不忘记自己从哪里出发，也因此走得更远。",
+          tags: ["感恩","怀旧","重情"],
+          dims: { gratitude: 0.95, nostalgic: 0.90, authentic: 0.85 },
+          lyric: "不要问我从哪里来 我的故乡在远方",
+          playlist: ["橄榄树","Hey Jude","Silent All These Years","原来你什么都不要","Venus"],
+          cover: "https://p2.music.126.net/2b8YdHt4l6l1F1N3u_VhJg==/109951163930520484.jpg",
+          color: "#8a7a6a"
+        },
+        { 
+          code: "LEAVE", name: "Leave", year: "2002",
+          tagline: "用音乐震撼你的想象，用音乐证明一切",
+          desc: "《懂事》的摇滚、《直来直往》的 Hip-Hop……这张专辑是孙燕姿最“有态度”的作品之一。你是一个不拖泥带水的人，知道什么时候该留下，什么时候该体面地离开。告别是为了更好的开始。",
+          tags: ["果断","独立","清醒"],
+          dims: { decisive: 0.90, independent: 0.88, selfAware: 0.82 },
+          lyric: "是我一直太懂事 任你自由地犯错",
+          playlist: ["懂事","直来直往","我不爱","一样的夏天","Leave"],
+          cover: "https://p2.music.126.net/UVh2nR8c9t6e4kH1G1xWKw==/109951163930529467.jpg",
+          color: "#6a7a8a"
+        },
+        { 
+          code: "UNFINISHED", name: "未完成", year: "2003",
+          tagline: "未完成是个期待",
+          desc: "《未完成》的标题本身就是一种人生态度：不急于画上句号，享受过程中的每一刻。你是一个对生活保持开放心态的人，不害怕改变，也不急着抵达终点，因为你相信最美的风景在路上。",
+          tags: ["开放","成长","乐观"],
+          dims: { openness: 0.92, growth: 0.88, optimism: 0.85 },
+          lyric: "忘了所有 过得比你快活",
+          playlist: ["神奇","我不难过","未完成","学会","休止符"],
+          cover: "https://p2.music.126.net/3c5fT7gY8h9i0j1K2L3mN4==/109951163930538742.jpg",
+          color: "#8a7a7a"
+        },
+        { 
+          code: "THE_MOMENT", name: "The Moment", year: "2003",
+          tagline: "这一刻，是结束，也是开始",
+          desc: "《这一刻》是告别，《遇见》是开始。这张专辑是孙燕姿暂别歌坛前的一张精选+新歌，充满了“阶段性总结”的味道。你是一个善于复盘、懂得取舍的人，知道什么时候该按下暂停键，也相信下一站会更美。",
+          tags: ["内省","勇气","希望"],
+          dims: { introspective: 0.90, courage: 0.85, hope: 0.88 },
+          lyric: "不要忘记 那些灿烂过的痕迹",
+          playlist: ["The Moment","遇见","懒得去管","不能和你一起","太阳底下"],
+          cover: "https://p2.music.126.net/4d6gU8h9i0j1K2L3mN4O5==/109951163930545823.jpg",
+          color: "#7a8a7a"
+        },
+        { 
+          code: "STEFANIE", name: "Stefanie", year: "2004",
+          tagline: "Hello, I'm Stefanie ...",
+          desc: "用自己名字命名专辑，是一种宣告：我回来了，而且我更清楚我是谁。《我的爱》里的深情，《同类》里的孤独共鸣——你是一个真实、不伪装的人，敢于面对自己的脆弱，也因此更强大。",
+          tags: ["真实","深情","内省"],
+          dims: { authentic: 0.92, emotional: 0.85, resilient: 0.80 },
+          lyric: "去年捡的 美丽贝壳 心不透彻 不会懂多难得",
+          playlist: ["我的爱","我也很想他","同类","慢慢来","Stefanie"],
+          cover: "https://p2.music.126.net/5e7fH8i9j0K1L2M3n4O5P6==/109951163930552987.jpg",
+          color: "#9a7a6a"
+        },
+        { 
+          code: "PERFECT_DAY", name: "完美的一天", year: "2005",
+          tagline: "一望无际的海边沙滩，一间洒满阳光的房子，一个一起生活的人，2只小狗，听不完的音乐，自由自在着",
+          desc: "《完美的一天》是一张“不完美却很快乐”的专辑，有《第一天》的元气，有《眼泪成诗》的细腻。你是一个懂得享受生活小确幸的人，不追求宏大叙事，能在平凡的日子里找到闪闪发光的瞬间。",
+          tags: ["乐观","松弛","童真"],
+          dims: { optimism: 0.90, relaxed: 0.88, playful: 0.85 },
+          lyric: "我要一所大房子 有很大的落地窗户",
+          playlist: ["完美的一天","心愿","第一天","隐形人","Honey Honey"],
+          cover: "https://p2.music.126.net/6f8gI9j0K1L2M3n4O5P6Q7==/109951163930562134.jpg",
+          color: "#aa8a6a"
+        },
+        { 
+          code: "AGAINST_LIGHT", name: "逆光", year: "2007",
+          tagline: "上一阶段的完美ending，下一阶段的逆光起飞",
+          desc: "《逆光》诞生于孙燕姿经历合约风波之后，整张专辑充满了“永不放弃”的力量。《我怀念的》是释怀，《逆光》是希望。你是一个越挫越勇的人，即使面对逆光看不清前方，也依然选择向前走。",
+          tags: ["坚韧","希望","深情"],
+          dims: { resilience: 0.95, hope: 0.90, emotional: 0.82 },
+          lyric: "感觉爱存在的地方 一直就在 我身旁",
+          playlist: ["逆光","我怀念的","咕叽咕叽","飘着","需要你"],
+          cover: "https://p2.music.126.net/7g8hJ9k0L1M2N3o4P5Q6R7==/109951163930571298.jpg",
+          color: "#ba9a6a"
+        },
+        { 
+          code: "ITS_TIME", name: "是时候", year: "2011",
+          tagline: "沉淀四年，重新出发",
+          desc: "四年沉寂后的回归之作，《世说心语》里的空灵电子，《当冬夜渐暖》里的温柔坚韧。你是一个不急于证明自己的人，懂得在沉默中积蓄力量，在合适的时候惊艳所有人。",
+          tags: ["耐心","沉淀","智慧"],
+          dims: { patience: 0.92, wisdom: 0.88, resilience: 0.85 },
+          lyric: "重要的是 我们如何 爱过那一段",
+          playlist: ["世说心语","当冬夜渐暖","愚人的国度","是时候","快疯了"],
+          cover: "https://p2.music.126.net/8h9iK0l1M2N3O4P5Q6R7S8==/109951163930580476.jpg",
+          color: "#7a9a8a"
+        },
+        { 
+          code: "KEPLER", name: "克卜勒", year: "2014",
+          tagline: "在浩瀚宇宙中，我们彼此映照",
+          desc: "《克卜勒》是一张关于“连接”的专辑——即使每个人都是一颗孤独的星球，我们依然可以彼此照亮。你是一个温柔而有力量的人，懂得在孤独中找到意义，也愿意成为别人的光。",
+          tags: ["温柔","孤独","连接"],
+          dims: { tenderness: 0.90, solitude: 0.85, connection: 0.82 },
+          lyric: "等不到你 成为我最闪亮的星星 我依然愿意借给你我的光",
+          playlist: ["克卜勒","无限大","尚好的青春","天使的指纹","雨还是不停地落下"],
+          cover: "https://p2.music.126.net/9i0jL1k2M3N4O5P6Q7R8S9T==/109951163930589654.jpg",
+          color: "#5a7a9a"
+        },
+        { 
+          code: "VAN_GOGH", name: "跳舞的梵谷", year: "2017",
+          tagline: "理智与疯狂，我选择并行",
+          desc: "这是孙燕姿最具实验性的一张专辑，“理智与疯狂并行”是它的灵魂。你是一个不畏惧内心黑暗面的人，接受自己的矛盾，也拥抱自己的复杂。在别人眼中你可能有点“疯”，但那是你独特的生命力。",
+          tags: ["复杂","疯狂","真实"],
+          dims: { complexity: 0.95, creativity: 0.90, authenticity: 0.88 },
+          lyric: "不回顾 不顽固 不踟蹰",
+          playlist: ["跳舞的梵谷","超人类","风衣","天天年年","极美"],
+          cover: "https://p2.music.126.net/0j1K2L3M4N5O6P7Q8R9S0T==/109951163930598832.jpg",
+          color: "#8a5a7a"
+        }
+      ];
+
+      // 专辑维度标签 (用于展示)
+      const DIM_NAMES = {
+        courage: "勇敢", purity: "纯粹", growth: "成长", rational: "理性", independence: "独立",
+        freedom: "自由", warmth: "温暖", wisdom: "智慧", gratitude: "感恩", nostalgic: "怀旧",
+        authentic: "真实", decisive: "果断", selfAware: "清醒", openness: "开放", optimism: "乐观",
+        introspective: "内省", hope: "希望", emotional: "深情", resilient: "坚韧", relaxed: "松弛",
+        playful: "童趣", patience: "耐心", tenderness: "温柔", solitude: "孤独", connection: "连接",
+        complexity: "复杂", creativity: "创造"
+      };
+
+      // 十六道生活化问题
+      const questions = [
+        { id: "q1", text: "周末早晨醒来，阳光洒在地板上。你最想做什么？",
+          options: [{label:"立刻计划一天的行程，不浪费光阴", value: 1},{label:"赖会儿床，发发呆，享受无所事事的奢侈", value: 2},{label:"去尝试一件没做过的事，比如新开的画室", value: 3}] },
+        { id: "q2", text: "朋友遇到烦心事，向你倾诉。你的第一反应是？",
+          options: [{label:"先听对方说完，不急着给建议", value: 1},{label:"理性分析问题，帮TA理清思路", value: 2},{label:"用自己的类似经历安慰TA，说“我懂”", value: 3}] },
+        { id: "q3", text: "关于“未来”，你的态度更接近？",
+          options: [{label:"有清晰的规划和目标，一步步靠近", value: 1},{label:"相信船到桥头自然直，边走边看", value: 2},{label:"对未知既期待又有点不安，但愿意探索", value: 3}] },
+        { id: "q4", text: "如果要选一种旅行方式，你会选？",
+          options: [{label:"自驾去荒野，享受自由与冒险", value: 1},{label:"去一座陌生的城市，漫无目的地闲逛", value: 2},{label:"回老家或去一个有回忆的地方，怀旧", value: 3}] },
+        { id: "q5", text: "当别人对你的选择提出质疑时，你通常会？",
+          options: [{label:"坚持自己的想法，不太容易被影响", value: 1},{label:"会认真思考对方的意见，再做决定", value: 2},{label:"表面不反驳，但内心有自己的坚持", value: 3}] },
+        { id: "q6", text: "你觉得自己最像以下哪种自然元素？",
+          options: [{label:"风——自由、洒脱、来去无踪", value: 1},{label:"树——扎根、稳定、默默生长", value: 2},{label:"水——柔软、适应力强、可静可动", value: 3}] },
+        { id: "q7", text: "在一段关系（友情/爱情）中，你最看重？",
+          options: [{label:"彼此独立的空间和边界感", value: 1},{label:"真诚与深度的情感连接", value: 2},{label:"共同成长和互相成就", value: 3}] },
+        { id: "q8", text: "你如何面对“孤独”？",
+          options: [{label:"享受独处，那是和自己对话的时间", value: 1},{label:"偶尔孤独可以，但更渴望与人连接", value: 2},{label:"不太喜欢孤独，会主动寻找陪伴", value: 3}] },
+        { id: "q9", text: "如果让你用一种音乐风格代表自己，你选？",
+          options: [{label:"摇滚——有态度、有力量", value: 1},{label:"抒情——真诚、叙事、有温度", value: 2},{label:"电子/实验——新奇、变化、不受限", value: 3}] },
+        { id: "q10", text: "面对一个重大的改变（换工作、搬家等），你的心态是？",
+          options: [{label:"期待！新阶段意味着新的可能性", value: 1},{label:"既期待又紧张，会做足准备", value: 2},{label:"会有些留恋过去，但知道必须往前走", value: 3}] },
+        { id: "q11", text: "你如何评价自己“内心的小孩”？",
+          options: [{label:"保护得很好，常常出来玩耍", value: 1},{label:"还在，但平时藏得比较深", value: 2},{label:"偶尔出来，提醒我别忘了简单的快乐", value: 3}] },
+        { id: "q12", text: "你对“规则”的态度是？",
+          options: [{label:"尊重规则，但必要时也会打破", value: 1},{label:"不太喜欢被规则束缚，喜欢自由发挥", value: 2},{label:"规则是秩序的保障，一般会遵守", value: 3}] },
+        { id: "q13", text: "当你陷入低谷时，最能给你力量的是？",
+          options: [{label:"听听歌，汲取力量，相信自己可以的", value: 1},{label:"家人或朋友的陪伴与支持", value: 2},{label:"过去的经历——我知道我曾走过更难的", value: 3}] },
+        { id: "q14", text: "你觉得“成熟”意味着？",
+          options: [{label:"懂得取舍，知道什么更重要", value: 1},{label:"接纳自己的不完美，也接纳世界的复杂", value: 2},{label:"依然保持天真，但有保护它的能力", value: 3}] },
+        { id: "q15", text: "如果要给十年后的自己留一句话，你会说？",
+          options: [{label:"“不想工作不想困扰自己”", value: 1},{label:"“无论如何，平日快乐”", value: 2},{label:"“别忘了当初为什么出发”", value: 3}] },
+        { id: "q16", text: "最后，用一个词形容你的“灵魂底色”是？",
+          options: [{label:"勇敢", value: 1},{label:"温柔", value: 2},{label:"自由", value: 3}] }
+      ];
+
+      // ---------- 全局变量 ----------
+      let answers = {};
+      let currentVisible = questions;
+      const screens = {
+        intro: document.getElementById('intro'),
+        test: document.getElementById('test'),
+        result: document.getElementById('result')
+      };
+      const questionList = document.getElementById('questionList');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      const submitBtn = document.getElementById('submitBtn');
+      const testHint = document.getElementById('testHint');
+
+      // 辅助函数
+      function showScreen(name) {
+        Object.entries(screens).forEach(([key, el]) => {
+          el.classList.toggle('active', key === name);
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function renderQuestions() {
+        questionList.innerHTML = '';
+        currentVisible.forEach((q, index) => {
+          const card = document.createElement('article');
+          card.className = 'question';
+          const optionsHtml = q.options.map((opt, i) => {
+            const code = ['A', 'B', 'C'][i];
+            const checked = answers[q.id] === opt.value ? 'checked' : '';
+            return `
+              <label class="option">
+                <input type="radio" name="${q.id}" value="${opt.value}" ${checked}>
+                <div class="option-code">${code}</div>
+                <div>${opt.label}</div>
+              </label>
+            `;
+          }).join('');
+          card.innerHTML = `
+            <div class="question-meta">
+              <div class="badge">第 ${index + 1} 题</div>
+              <div>🎵 my story your song</div>
+            </div>
+            <div class="question-title">${q.text}</div>
+            <div class="options">${optionsHtml}</div>
+          `;
+          questionList.appendChild(card);
+        });
+
+        questionList.querySelectorAll('input[type="radio"]').forEach(input => {
+          input.addEventListener('change', (e) => {
+            const { name, value } = e.target;
+            answers[name] = Number(value);
+            updateProgress();
+          });
+        });
+
+        updateProgress();
+      }
+
+      function updateProgress() {
+        const total = currentVisible.length;
+        const done = currentVisible.filter(q => answers[q.id] !== undefined).length;
+        const percent = total ? (done / total) * 100 : 0;
+        progressBar.style.width = `${percent}%`;
+        progressText.textContent = `${done} / ${total}`;
+        const complete = done === total;
+        submitBtn.disabled = !complete;
+        testHint.textContent = complete ? '🎉 你已完成所有题目！点击揭晓属于你的专辑。' : '每一首主打歌，都是一次灵魂的试探。';
+      }
+
+      // 计算匹配度 (基于选项模式加权)
+      function computeMatch() {
+        // 初始化每个专辑的得分
+        const scores = ALBUMS.map(album => {
+          let totalScore = 0;
+          // 权重矩阵: 根据问题选项设定每个专辑的倾向
+          const weights = {
+            YANZI: { q1: [3,1,2], q2: [2,1,3], q3: [2,1,3], q4: [2,1,3], q5: [3,2,1], q6: [1,2,3], q7: [1,3,2], q8: [1,2,3], q9: [1,2,3], q10: [2,3,1], q11: [3,1,2], q12: [1,3,2], q13: [3,2,1], q14: [2,3,1], q15: [3,2,1], q16: [3,1,2] },
+            HAPPINESS: { q1: [3,2,1], q2: [2,3,1], q3: [3,1,2], q4: [1,3,2], q5: [2,3,1], q6: [2,3,1], q7: [1,2,3], q8: [2,1,3], q9: [1,2,3], q10: [3,2,1], q11: [2,1,3], q12: [2,3,1], q13: [1,3,2], q14: [3,1,2], q15: [1,2,3], q16: [1,3,2] },
+            KITE: { q1: [2,1,3], q2: [1,3,2], q3: [1,2,3], q4: [3,1,2], q5: [3,1,2], q6: [3,1,2], q7: [3,1,2], q8: [2,3,1], q9: [2,1,3], q10: [1,2,3], q11: [1,3,2], q12: [3,2,1], q13: [1,2,3], q14: [1,3,2], q15: [1,3,2], q16: [3,1,2] },
+            START: { q1: [1,3,2], q2: [1,3,2], q3: [1,2,3], q4: [1,2,3], q5: [2,1,3], q6: [2,1,3], q7: [2,3,1], q8: [2,1,3], q9: [1,3,2], q10: [2,1,3], q11: [2,3,1], q12: [1,2,3], q13: [2,3,1], q14: [2,1,3], q15: [2,1,3], q16: [1,2,3] },
+            LEAVE: { q1: [2,3,1], q2: [2,1,3], q3: [1,3,2], q4: [3,2,1], q5: [3,1,2], q6: [3,2,1], q7: [3,1,2], q8: [1,3,2], q9: [3,1,2], q10: [2,1,3], q11: [1,2,3], q12: [3,2,1], q13: [1,3,2], q14: [1,2,3], q15: [1,3,2], q16: [1,3,2] },
+            UNFINISHED: { q1: [1,2,3], q2: [1,2,3], q3: [2,1,3], q4: [1,3,2], q5: [1,3,2], q6: [1,3,2], q7: [2,1,3], q8: [2,3,1], q9: [1,3,2], q10: [3,2,1], q11: [2,1,3], q12: [1,3,2], q13: [1,2,3], q14: [2,1,3], q15: [3,1,2], q16: [1,2,3] },
+            THE_MOMENT: { q1: [1,2,3], q2: [3,1,2], q3: [2,1,3], q4: [2,1,3], q5: [1,3,2], q6: [2,3,1], q7: [2,1,3], q8: [3,2,1], q9: [2,1,3], q10: [3,1,2], q11: [2,3,1], q12: [2,1,3], q13: [3,2,1], q14: [3,1,2], q15: [2,3,1], q16: [2,1,3] },
+            STEFANIE: { q1: [2,3,1], q2: [3,2,1], q3: [1,2,3], q4: [1,2,3], q5: [1,3,2], q6: [2,1,3], q7: [2,3,1], q8: [2,3,1], q9: [2,3,1], q10: [1,2,3], q11: [2,1,3], q12: [1,2,3], q13: [2,3,1], q14: [3,2,1], q15: [1,2,3], q16: [2,3,1] },
+            PERFECT_DAY: { q1: [1,3,2], q2: [3,1,2], q3: [2,3,1], q4: [1,2,3], q5: [2,1,3], q6: [1,2,3], q7: [1,3,2], q8: [1,2,3], q9: [1,2,3], q10: [3,1,2], q11: [3,2,1], q12: [2,1,3], q13: [1,2,3], q14: [3,1,2], q15: [2,1,3], q16: [1,2,3] },
+            AGAINST_LIGHT: { q1: [1,2,3], q2: [3,1,2], q3: [2,3,1], q4: [2,1,3], q5: [3,1,2], q6: [3,2,1], q7: [2,3,1], q8: [2,1,3], q9: [3,2,1], q10: [3,1,2], q11: [1,3,2], q12: [2,1,3], q13: [3,1,2], q14: [1,3,2], q15: [2,1,3], q16: [3,2,1] },
+            ITS_TIME: { q1: [1,3,2], q2: [1,3,2], q3: [2,3,1], q4: [1,2,3], q5: [2,1,3], q6: [2,3,1], q7: [1,2,3], q8: [3,2,1], q9: [2,1,3], q10: [2,3,1], q11: [2,1,3], q12: [1,3,2], q13: [3,2,1], q14: [3,1,2], q15: [1,3,2], q16: [1,2,3] },
+            KEPLER: { q1: [2,3,1], q2: [3,2,1], q3: [1,3,2], q4: [2,1,3], q5: [1,2,3], q6: [3,2,1], q7: [2,3,1], q8: [3,2,1], q9: [2,1,3], q10: [1,3,2], q11: [2,1,3], q12: [1,2,3], q13: [3,1,2], q14: [2,3,1], q15: [2,1,3], q16: [2,3,1] },
+            VAN_GOGH: { q1: [3,2,1], q2: [1,3,2], q3: [3,1,2], q4: [3,2,1], q5: [1,3,2], q6: [1,3,2], q7: [1,2,3], q8: [1,3,2], q9: [3,1,2], q10: [2,1,3], q11: [1,2,3], q12: [3,1,2], q13: [1,3,2], q14: [2,1,3], q15: [3,2,1], q16: [1,3,2] }
+          };
+
+          const albumWeights = weights[album.code] || {};
+          for (let i = 1; i <= 16; i++) {
+            const qId = `q${i}`;
+            const ans = answers[qId];
+            if (ans) {
+              const qWeights = albumWeights[qId] || [1,2,3];
+              totalScore += qWeights[ans - 1] || 2;
+            }
+          }
+          return { ...album, rawScore: totalScore };
+        });
+
+        // 排序
+        scores.sort((a, b) => b.rawScore - a.rawScore);
+        const best = scores[0];
+        const similarity = Math.round((best.rawScore / 48) * 100);
+        return { best, similarity, all: scores };
+      }
+
+      function renderResult() {
+        const { best, similarity } = computeMatch();
+        const album = best;
+
+        // 基础信息
+        document.getElementById('resultModeKicker').textContent = `🎤 ${album.year} · 灵魂专辑`;
+        document.getElementById('resultTypeName').textContent = album.name;
+        document.getElementById('matchBadge').innerHTML = `🎯 匹配度 ${similarity}% · 你们注定相遇`;
+        document.getElementById('resultTypeSub').textContent = album.tagline;
+        document.getElementById('resultDesc').textContent = album.desc;
+        document.getElementById('lyricDisplay').textContent = `“ ${album.lyric} ”`;
+
+        // 标签
+        const tagContainer = document.getElementById('tagContainer');
+        tagContainer.innerHTML = album.tags.map(t => `<span class="tag">#${t}</span>`).join('');
+
+        // 封面
+        const posterImg = document.getElementById('posterImage');
+        const posterCaption = document.getElementById('posterCaption');
+        posterImg.src = album.cover;
+        posterImg.alt = album.name;
+        posterImg.onerror = function() {
+          this.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\' viewBox=\'0 0 200 200\'%3E%3Crect width=\'200\' height=\'200\' fill=\'%23f5f0e9\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'14\' font-family=\'sans-serif\' fill=\'%238b5e3c\' text-anchor=\'middle\' dy=\'.3em\'%3E🎵 孙燕姿%3C/text%3E%3C/svg%3E';
+        };
+        posterCaption.textContent = `《${album.name}》· ${album.year}`;
+
+        // 维度展示
+        const dimList = document.getElementById('dimList');
+        const dims = album.dims;
+        dimList.innerHTML = Object.entries(dims).map(([key, val]) => {
+          const percent = Math.round(val * 100);
+          return `
+            <div class="dim-item">
+              <div class="dim-item-top">
+                <div class="dim-item-name">${DIM_NAMES[key] || key}</div>
+                <div class="dim-item-score">${percent}%</div>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${percent}%;"></div></div>
+            </div>
+          `;
+        }).join('');
+
+        // 歌单
+        const playlist = document.getElementById('playlist');
+        playlist.innerHTML = album.playlist.map(song => `<li>🎵 ${song}</li>`).join('');
+
+        showScreen('result');
+      }
+
+      function startTest() {
+        answers = {};
+        currentVisible = questions;
+        renderQuestions();
+        showScreen('test');
+      }
+
+      // 绑定事件
+      document.getElementById('startBtn').addEventListener('click', startTest);
+      document.getElementById('backIntroBtn').addEventListener('click', () => showScreen('intro'));
+      document.getElementById('submitBtn').addEventListener('click', renderResult);
+      document.getElementById('restartBtn').addEventListener('click', startTest);
+      document.getElementById('toTopBtn').addEventListener('click', () => showScreen('intro'));
+
+      // 初始化
+      renderQuestions();
+    })();
+  </script>
+</body>
+</html>
