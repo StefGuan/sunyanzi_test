@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>孙燕姿专辑匹配 · 你会被哪一种感觉找到</title>
   
-  <!-- 截图库 & 二维码生成库 -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-
+  <!-- 截图库（备用稳定CDN） -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- 二维码生成库 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
   <style>
     :root {
       --bg: #faf6f0;
@@ -1011,24 +1012,40 @@
 
         const img = snapshotContainer.querySelector('img');
         const doCapture = () => {
-          html2canvas(snapshotContainer, {
-            scale: 2,
-            backgroundColor: null,
-            allowTaint: false,
-            useCORS: true,
-            logging: false
-          }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `sunyanzi_${album.code}_share.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            document.body.removeChild(snapshotContainer);
-          }).catch(err => {
-            console.warn('截图失败: ', err);
-            alert('截图生成失败，可稍后重试～');
-            document.body.removeChild(snapshotContainer);
-          });
-        };
+    html2canvas(snapshotContainer, {
+      scale: 2.5,                  // 提高清晰度
+      backgroundColor: '#fdfaf7',
+      allowTaint: false,           // 不允许污染 canvas，必须配合 useCORS
+      useCORS: true,               // 关键：允许加载跨域图片
+      logging: false,
+      windowWidth: 600
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `sunyanzi_${album.code}_share.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      document.body.removeChild(snapshotContainer);
+    }).catch(err => {
+      console.warn('截图失败: ', err);
+      alert('截图生成失败，可稍后重试。若多次失败，可能是网络或图片跨域问题。');
+      document.body.removeChild(snapshotContainer);
+    });
+  };
+
+        const img = snapshotContainer.querySelector('img');
+        if (img.complete && img.naturalHeight > 0) {
+          doCapture();
+        } else {
+          img.onload = doCapture;
+          img.onerror = () => {
+            // 如果封面加载失败，依然继续截图（会显示占位图）
+            doCapture();
+          };
+          // 防止缓存图片未触发 onload，设置超时强制截图
+          setTimeout(() => {
+            if (snapshotContainer.parentNode) doCapture();
+          }, 2000);
+        }
 
         if (img.complete) doCapture();
         else {
