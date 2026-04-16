@@ -11,6 +11,7 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
   <style>
+    /* 保持原有样式不变，此处省略以节省篇幅，请直接复制你原先的完整 <style> 内容 */
     :root {
       --bg: #faf6f0;
       --panel: #ffffff;
@@ -490,6 +491,7 @@
       display: none !important;
     }
   </style>
+  
   <!-- 百度统计代码 (原有) -->
   <script>
   var _hmt = _hmt || [];
@@ -608,7 +610,7 @@
     (function(){
       "use strict";
 
-      // ---------- 专辑数据 (思想、介绍、代表作、图片等) ----------
+      // ---------- 专辑数据 ----------
       const ALBUMS = [
         { 
           code: "YANZI", name: "孙燕姿 同名专辑", year: "2000",
@@ -951,22 +953,34 @@
         showScreen('result');
       }
 
-      // ----- 分享截图功能 (生成含二维码的结果卡片) -----
+      // ----- 分享截图功能（居中+遮罩+修复）-----
       function generateShareSnapshot() {
         const { best: album, similarity } = computeMatch();
-      //const currentUrl = window.location.href;   // 或替换为固定短链
-        const currentUrl = "https://sunyanzi.xnewstart.com/";
+        const currentUrl = "https://sunyanzi.xnewstart.com/"; // 可替换为实际链接
 
-        // 创建离屏截图容器
+        // 创建半透明遮罩层
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+          position: fixed; left: 0; top: 0; width: 100%; height: 100%;
+          background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+          z-index: 99998;
+        `;
+        document.body.appendChild(overlay);
+
+        // 创建居中截图容器
         const snapshotContainer = document.createElement('div');
         snapshotContainer.style.cssText = `
-          position: fixed; left: 0; top: 0; width: 600px;
+          position: fixed; 
+          left: 50%; top: 50%; 
+          transform: translate(-50%, -50%);
+          width: 600px; max-width: 90vw;
           background: linear-gradient(145deg, #fdfaf7 0%, #f5efe8 100%);
           border-radius: 32px; padding: 28px 24px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+          box-shadow: 0 25px 50px rgba(0,0,0,0.3);
           font-family: system-ui, -apple-system, 'PingFang SC', sans-serif;
           color: #2e2b28;
-          z-index: -9999; opacity: 1;
+          z-index: 99999; 
+          border: 2px solid rgba(184,124,78,0.2);
         `;
 
         snapshotContainer.innerHTML = `
@@ -1010,47 +1024,38 @@
           correctLevel: QRCode.CorrectLevel.H
         });
 
-        const img = snapshotContainer.querySelector('img');
+        // 截图并清理
+        const imgElement = snapshotContainer.querySelector('img');
         const doCapture = () => {
-    html2canvas(snapshotContainer, {
-      scale: 2.5,                  // 提高清晰度
-      backgroundColor: '#fdfaf7',
-      allowTaint: false,           // 不允许污染 canvas，必须配合 useCORS
-      useCORS: true,               // 关键：允许加载跨域图片
-      logging: false,
-      windowWidth: 600
-    }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `sunyanzi_${album.code}_share.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      document.body.removeChild(snapshotContainer);
-    }).catch(err => {
-      console.warn('截图失败: ', err);
-      alert('截图生成失败，可稍后重试。若多次失败，可能是网络或图片跨域问题。');
-      document.body.removeChild(snapshotContainer);
-    });
-  };
+          html2canvas(snapshotContainer, {
+            scale: 2.5,
+            backgroundColor: '#fdfaf7',
+            allowTaint: false,
+            useCORS: true,
+            logging: false,
+            windowWidth: 600
+          }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `sunyanzi_${album.code}_share.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+          }).catch(err => {
+            console.warn('截图失败: ', err);
+            alert('截图生成失败，可稍后重试。');
+          }).finally(() => {
+            document.body.removeChild(snapshotContainer);
+            document.body.removeChild(overlay);
+          });
+        };
 
-        const img = snapshotContainer.querySelector('img');
-        if (img.complete && img.naturalHeight > 0) {
+        if (imgElement.complete && imgElement.naturalHeight > 0) {
           doCapture();
         } else {
-          img.onload = doCapture;
-          img.onerror = () => {
-            // 如果封面加载失败，依然继续截图（会显示占位图）
-            doCapture();
-          };
-          // 防止缓存图片未触发 onload，设置超时强制截图
+          imgElement.onload = doCapture;
+          imgElement.onerror = () => doCapture();
           setTimeout(() => {
             if (snapshotContainer.parentNode) doCapture();
           }, 2000);
-        }
-
-        if (img.complete) doCapture();
-        else {
-          img.onload = doCapture;
-          img.onerror = doCapture;
         }
       }
 
@@ -1067,9 +1072,16 @@
       document.getElementById('submitBtn').addEventListener('click', renderResult);
       document.getElementById('restartBtn').addEventListener('click', startTest);
       document.getElementById('toTopBtn').addEventListener('click', () => showScreen('intro'));
-      document.getElementById('shareSnapshotBtn').addEventListener('click', generateShareSnapshot);
+      
+      let isCapturing = false;
+      document.getElementById('shareSnapshotBtn').addEventListener('click', () => {
+        if (isCapturing) return;
+        isCapturing = true;
+        generateShareSnapshot();
+        setTimeout(() => { isCapturing = false; }, 1500);
+      });
 
-      // 初始化渲染
+      // 初始化
       renderQuestions();
     })();
   </script>
