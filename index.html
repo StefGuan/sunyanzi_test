@@ -11,7 +11,6 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   
   <style>
-    /* 保持原有样式不变 */
     :root {
       --bg: #faf6f0;
       --panel: #ffffff;
@@ -134,18 +133,24 @@
     .screen { display: none; }
     .screen.active { display: block; }
 
-    .test-wrap,
-    .result-wrap {
+    .test-wrap {
       margin-top: 22px;
       padding: 24px;
     }
 
+    /* 进度条区域固定置顶 */
     .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--panel);
+      padding: 12px 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--line);
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      margin-bottom: 24px;
       flex-wrap: wrap;
     }
 
@@ -260,6 +265,11 @@
     .hint {
       color: var(--muted);
       font-size: 14px;
+    }
+
+    .result-wrap {
+      margin-top: 22px;
+      padding: 24px;
     }
 
     .result-layout {
@@ -563,6 +573,7 @@
     <!-- 测试页面 -->
     <section id="test" class="screen">
       <div class="test-wrap card">
+        <!-- 进度条固定在顶部 -->
         <div class="topbar">
           <div class="progress"><span id="progressBar"></span></div>
           <div class="progress-text" id="progressText">0 / 16</div>
@@ -977,7 +988,7 @@
         showScreen('result');
       }
 
-      // ----- 分享截图功能（预览模式 + 含解读 + 长按保存）-----
+      // ----- 分享截图功能（预览模式 + 含全部信息 + 修复二维码白边）-----
       function generateShareSnapshot() {
         const { best: album, similarity } = computeMatch();
         const currentUrl = "https://sunyanzi.xnewstart.com/"; // 可替换为实际链接
@@ -991,7 +1002,7 @@
         `;
         document.body.appendChild(overlay);
 
-        // 截图卡片容器（居中）
+        // 截图卡片容器
         const snapshotContainer = document.createElement('div');
         snapshotContainer.style.cssText = `
           position: fixed; 
@@ -1007,7 +1018,7 @@
           border: 2px solid rgba(184,124,78,0.2);
         `;
 
-        // 卡片内容 (新增专辑思想解读段落)
+        // 卡片内容 (包含所有字段)
         snapshotContainer.innerHTML = `
           <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
             <div style="width: 120px; height: 120px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 16px rgba(0,0,0,0.1);">
@@ -1022,7 +1033,7 @@
             </div>
           </div>
 
-          <!-- 新增：专辑思想解读 -->
+          <!-- 专辑思想解读 -->
           <div style="background: rgba(255,255,255,0.6); border-radius: 20px; padding: 18px; margin-bottom: 16px; border-left: 4px solid #b87c4e;">
             <div style="font-size: 15px; font-weight: 600; color: #8b5e3c; margin-bottom: 8px;">🎙️ 专辑解读</div>
             <p style="font-size: 14px; line-height: 1.65; color: #3a3530; margin: 0;">${album.desc}</p>
@@ -1036,14 +1047,15 @@
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               ${album.tags.map(t => `<span style="background:#ede6df; padding:4px 14px; border-radius:40px; font-size:13px; color:#8b5e3c;">#${t}</span>`).join('')}
             </div>
-            <div id="qrcodeContainer" style="width: 80px; height: 80px; background: #fff; border-radius: 12px; padding: 6px;"></div>
+            <!-- 二维码容器：无背景无内边距，完全由QR码填充 -->
+            <div id="qrcodeContainer" style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden;"></div>
           </div>
           <div style="text-align: right; margin-top: 12px; font-size: 12px; color: #aaa;">扫码测试 · 找到你的专辑</div>
         `;
 
         document.body.appendChild(snapshotContainer);
 
-        // 生成二维码
+        // 生成二维码，直接填充到容器
         const qrcodeEl = snapshotContainer.querySelector('#qrcodeContainer');
         new QRCode(qrcodeEl, {
           text: currentUrl,
@@ -1056,7 +1068,6 @@
 
         const imgElement = snapshotContainer.querySelector('img');
 
-        // 截图并转为预览（不自动下载）
         const doCapture = () => {
           html2canvas(snapshotContainer, {
             scale: 2.5,
@@ -1066,7 +1077,7 @@
             logging: false,
             windowWidth: 600
           }).then(canvas => {
-            // 移除原始卡片，用图片替换显示
+            // 替换为预览图
             snapshotContainer.style.background = 'transparent';
             snapshotContainer.style.boxShadow = 'none';
             snapshotContainer.style.border = 'none';
@@ -1079,7 +1090,6 @@
             previewImg.alt = '分享截图';
             snapshotContainer.appendChild(previewImg);
 
-            // 添加提示文字与关闭按钮
             const tip = document.createElement('div');
             tip.style.textAlign = 'center';
             tip.style.marginTop = '16px';
@@ -1089,7 +1099,6 @@
             tip.innerText = '📱 长按图片即可保存到相册';
             snapshotContainer.appendChild(tip);
 
-            // 关闭按钮
             const closeBtn = document.createElement('button');
             closeBtn.className = 'preview-close-btn';
             closeBtn.innerHTML = '&times;';
@@ -1107,7 +1116,6 @@
           });
         };
 
-        // 等待图片加载
         if (imgElement.complete && imgElement.naturalHeight > 0) {
           doCapture();
         } else {
